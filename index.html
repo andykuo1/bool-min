@@ -236,20 +236,20 @@
         }
         return res;
       };
-      this.toTermString = function() {
+      this.toTermString = function(ctx) {
         if (this.terms.length > 0)
         {
           var s = "";
           for(var i = 0, len = this.terms.length; i < len; ++i)
           {
             if (i != 0) s += "-";
-            s += this.terms[i].toTermString();
+            s += this.terms[i].toTermString(ctx);
           }
           return s;
         }
         else
         {
-          return parseInt(this.bits, 2);
+          return (ctx.mterms.indexOf(this) == -1 ? "m" : "d") + parseInt(this.bits, 2);
         }
       };
       this.toString = function() {
@@ -436,7 +436,7 @@
     {
       var term = ctx.mterms[i];
       if (i != 0) result += ", ";
-      result += term.toTermString();
+      result += term.toTermString(ctx);
     }
     result += ")";
     //Output dterms
@@ -445,7 +445,7 @@
     {
       var term = ctx.dterms[i];
       if (i != 0) result += ", ";
-      result += term.toTermString();
+      result += term.toTermString(ctx);
     }
     result += ")";
     $('.output #func').html(result);
@@ -532,7 +532,7 @@
         {
           row += "<td>";
         }
-        row += g[j] + "</td></tr><tr>";
+        row += g[j].toCanonicalString() + "</td></tr><tr>";
       }
     }
     result += row;
@@ -564,7 +564,7 @@
     header = "<th>Terms</th>";
     for(var i = 0, len = ctx.mterms.length; i < len; ++i)
     {
-      header += "<th>" + ctx.mterms[i].toTermString() + "</th>";
+      header += "<th>" + ctx.mterms[i].toTermString(ctx) + "</th>";
     }
     result += "<tr>" + header + "</tr>";
 
@@ -573,7 +573,7 @@
     {
       var ess = essentials[i];
       row = "<tr>";
-      row += "<td>" + ess.toTermString() + "</td>";
+      row += "<td>" + ess.toTermString(ctx) + "</td>";
       for(var j = 0, len2 =  ctx.mterms.length; j < len2; ++j)
       {
         var mt = ctx.mterms[j];
