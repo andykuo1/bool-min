@@ -214,11 +214,21 @@
           this.terms[i].markDirty();
         }
       };
-      this.toCanonicalString = function() {
+      this.toCanonicalString = function(dashes) {
         var res = "";
         for(var i = 0, len = this.bits.length; i < len; ++i)
         {
-          if (this.bits[i] == '-') continue;
+          if (this.bits[i] == '-')
+          {
+            if (dashes)
+            {
+              res += "- ";
+            }
+            else
+            {
+              continue;
+            }
+          }
 
           var s = String.fromCharCode('A'.charCodeAt(0) + i);
           if (this.bits[i] == '0')
@@ -436,7 +446,7 @@
     {
       var term = ctx.mterms[i];
       if (i != 0) result += ", ";
-      result += term.toTermString(ctx);
+      result += term.toTermString();
     }
     result += ")";
     //Output dterms
@@ -445,7 +455,7 @@
     {
       var term = ctx.dterms[i];
       if (i != 0) result += ", ";
-      result += term.toTermString(ctx);
+      result += term.toTermString();
     }
     result += ")";
     $('.output #func').html(result);
@@ -532,7 +542,7 @@
         {
           row += "<td>";
         }
-        row += g[j].toCanonicalString() + "</td></tr><tr>";
+        row += g[j].toCanonicalString(true) + "</td></tr><tr>";
       }
     }
     result += row;
@@ -564,7 +574,7 @@
     header = "<th>Terms</th>";
     for(var i = 0, len = ctx.mterms.length; i < len; ++i)
     {
-      header += "<th>" + ctx.mterms[i].toTermString(ctx) + "</th>";
+      header += "<th>" + ctx.mterms[i].toTermString() + "</th>";
     }
     result += "<tr>" + header + "</tr>";
 
