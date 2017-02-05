@@ -249,7 +249,7 @@
         }
         else
         {
-          return (ctx.mterms.indexOf(this) == -1 ? "m" : "d") + parseInt(this.bits, 2);
+          return (ctx ? (ctx.mterms.indexOf(this) == -1 ? "d" : "m") : "") + parseInt(this.bits, 2);
         }
       };
       this.toString = function() {
