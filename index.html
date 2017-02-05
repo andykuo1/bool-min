@@ -539,7 +539,7 @@
         {
           row += "<td>";
         }
-        row += g[j].toCanonicalString(true) + "</td></tr><tr>";
+        row += term.toTermString(ctx) + "(" + g[j].toCanonicalString(true) + ")" + "</td></tr><tr>";
       }
     }
     result += row;
