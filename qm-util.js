@@ -192,6 +192,18 @@ var BitTerm = function(bits)
   this.toString = function() {
     return this.bits;
   };
+  this.isEqual = function(term) {
+    if (!term) return false;
+    for(var i = 0, len = this.bits.length; i < len; ++i)
+    {
+      var b = this.bits[i];
+      var b2 = term.bits[i];
+      if (b == '-') continue;
+      if (b2 == '-') continue;
+      if (b != b2) return false;
+    }
+    return true;
+  };
 };
 
 function formatBitTerm(ctx, term)
@@ -215,6 +227,32 @@ function containsBitTerm(arr, bitterm)
   }
 
   return false;
+}
+
+function containsFuzzyBitTerm(arr, bitterm)
+{
+  for(var i = 0; i < arr.length; ++i)
+  {
+    if (bitterm.isEqual(arr[i]))
+    {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+function indexOfFuzzyBitTerm(arr, bitterm)
+{
+  for(var i = 0; i < arr.length; ++i)
+  {
+    if (bitterm.isEqual(arr[i]))
+    {
+      return i;
+    }
+  }
+
+  return -1;
 }
 
 function diffBitTerms(ctx, a, b)
@@ -507,4 +545,43 @@ function createContext(mterms, dterms)
   }
 
   return ctx;
+}
+
+function generateGrayCode(bits)
+{
+  if (bits <= 0) return [];
+
+  var result = [];
+
+  result.push("0");
+  result.push("1");
+
+  var i = 0, j = 0;
+  for (i = 2; i < (1 << bits); i = i << 1)
+  {
+    for (j = i - 1 ; j >= 0; --j)
+    {
+      result.push(result[j]);
+    }
+
+    for(j = 0; j < i; ++j)
+    {
+      result[j] = "0" + result[j];
+    }
+
+    for(j = i; j < 2 * i; ++j)
+    {
+      result[j] = "1" + result[j];
+    }
+  }
+
+  return result;
+}
+
+function generatePastelColor()
+{
+    var r = (Math.round(Math.random()* 127) + 127).toString(16);
+    var g = (Math.round(Math.random()* 127) + 127).toString(16);
+    var b = (Math.round(Math.random()* 127) + 127).toString(16);
+    return '#' + r + g + b;
 }

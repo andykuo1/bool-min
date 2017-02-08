@@ -1,8 +1,25 @@
 
 table {
   border-collapse: separate;
-  border-spacing: 5px 0;
+  border-spacing: 0;
 }
+
+th
+{
+  padding: 8px 2vw;
+  background-color: #ccc;
+}
+
+td
+{
+  padding: 4px;
+}
+
+.output-qm #essentialtable td, .output-km #kmap td
+{
+  text-align: center;
+}
+
 input, .input {
   display: inline-block;
   font-size: 30px;

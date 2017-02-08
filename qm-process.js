@@ -26,7 +26,7 @@ function processQM(mterms, dterms)
 
   console.log("Processing Implicants to Essentials . . .");
   var essterms = processImplicantsToEssentialTerms(ctx, impGroup);
-  outputEssentials(ctx, essterms);
+  //outputEssentials(ctx, essterms);
 
   console.log("Evaluating Essentials to Prime Essentials . . .");
   var simterms = [];
@@ -39,6 +39,9 @@ function processQM(mterms, dterms)
 
   console.log("Solution Found!");
   ctx.solution = simterms.slice();
+
+  //Outputting McCluskey Table . . .
+  outputImplicantTable(ctx, essterms);
 
   var output = "";
   for(var i = 0; i < simterms.length; ++i)

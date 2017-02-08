@@ -52,11 +52,19 @@ function outputOneGroupses(ctx, onegroupses)
   }
 }
 
-function outputEssentials(ctx, essentials)
+function outputImplicantTable(ctx, implicants)
 {
   var result = "";
   var header = "";
+  var colbody = "";
+  var body = "";
   var row = "";
+  var cell = "";
+
+  var prime = false;
+  var primecolor = "#000000";
+
+  var colcolor = [ctx.mterms.length];
 
   //Output header
   result = "<table>";
@@ -67,43 +75,62 @@ function outputEssentials(ctx, essentials)
   }
   result += "<tr>" + header + "</tr>";
 
-  //Output essentials
-  for(var i = 0, len = essentials.length; i < len; ++i)
+  //Output implicants
+  for(var i = 0, len = implicants.length; i < len; ++i)
   {
-    var ess = essentials[i];
-    row = "<tr>";
+    var ess = implicants[i];
+    prime = containsBitTerm(ctx.solution, ess);
+    if (prime)
+    {
+      primecolor = generatePastelColor();
+    }
+
+    row = prime ? "<tr style=\"background-color:" + primecolor + "\">" : "<tr>";
     row += "<td>" + ess.toTermString(ctx) + "</td>";
     for(var j = 0, len2 =  ctx.mterms.length; j < len2; ++j)
     {
       var mt = ctx.mterms[j];
+      row += "<td>";
       if (ess.hasTerms(mt))
       {
-        row += "<td>X</td>";
+        row += "X";
+        if (prime)
+        {
+          colcolor[j] = primecolor;
+        }
       }
-      else
-      {
-        row += "<td></td>";
-      }
+      row += "</td>";
     }
     row += "</tr>";
-    result += row;
+    body += row;
   }
+
+  for(var i = 0, len = colcolor.length; i < len; ++i)
+  {
+    var c = colcolor[i];
+    if (c)
+    {
+      colbody += "<col style=\"background-color:" + c + "\">"
+    }
+  }
+  result += "<colgroup><col>" + colbody + "</colgroup>";
+  result += body;
   result += "</table>";
 
-  $('.output-qm #essentialtable').html(result);
+  $('.output-qm #implicanttable').html(result);
 }
 
 function outputPrimeImplicantTerms(ctx, primeterms)
 {
   var result = "";
-  result += "<h3>";
   for(var i = 0; i < primeterms.length; ++i)
   {
-    result += "<h3>";
     var term = primeterms[i];
     if (i != 0) result += "";
-    result += term.toCanonicalString();
-    result += "</h3>";
+    result += term.toTermString(ctx) + "(";
+    result += term.toCanonicalString() + ")";
+    result += "<br />";
+    result += "<br />";
   }
 
   $('.output-qm #primeimplicant').html(result);
