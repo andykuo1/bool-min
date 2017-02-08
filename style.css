@@ -1,0 +1,25 @@
+
+table {
+  border-collapse: separate;
+  border-spacing: 5px 0;
+}
+input, .input {
+  display: inline-block;
+  font-size: 30px;
+}
+.output {
+  font-size: 20px;
+  padding: 4vh 4vw;
+  border-style: solid;
+  border-width: 1px;
+}
+.output-qm {
+  padding: 4vh 4vw;
+  border-style: solid;
+  border-width: 1px;
+}
+.output-km {
+  padding: 4vh 4vw;
+  border-style: solid;
+  border-width: 1px;
+}
