@@ -1,6 +1,6 @@
 function outputKMap(ctx)
 {
-  var ybits = ctx.bits / 2;
+  var ybits = Math.floor(ctx.bits / 2);
   var xbits = ctx.bits - ybits;
 
   var result = "";
@@ -21,7 +21,7 @@ function outputKMap(ctx)
     title += (String.fromCharCode('A'.charCodeAt(0) + i));
   }
   title += " X ";
-  for(var i = ybits, len = ybits + xbits; i < len; ++i)
+  for(var i = ybits, len = ctx.bits; i < len; ++i)
   {
     title += (String.fromCharCode('A'.charCodeAt(0) + i));
   }
