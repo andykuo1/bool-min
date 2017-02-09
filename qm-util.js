@@ -516,6 +516,12 @@ function parse(src)
 
 function createContext(mterms, dterms)
 {
+  var eqnoper = $('input[name=eqnoper]:checked').val();
+  if (eqnoper == "pos")
+  {
+    alert("This is not yet implemented!");
+  }
+
   var umt = sortAndUnique(mterms);
   var udt = sortAndUnique(dterms);
   var t = umt.concat(udt);
