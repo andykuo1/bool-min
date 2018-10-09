@@ -1,3 +1,4 @@
+
 function processQM(mterms, dterms)
 {
   var ctx = createContext(mterms, dterms);

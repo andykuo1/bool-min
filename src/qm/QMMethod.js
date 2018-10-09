@@ -39,9 +39,9 @@ export default function solve(mTerms, dTerms)
     //console.log("...counted bits:", term, "has", i + 1, "bit(s)...");
     let group = size1OneGroups[i];
     if (!group) group = size1OneGroups[i] = [];
-    group.push(createSingleImplicant(term));
+    group.push(createSingleImplicant(ctx, term));
   }
-  console.log("Created size-1 one-groups:", size1OneGroups.map(e=>e.map(e=>e.terms)));
+  console.log("Created size-1 one-groups:", size1OneGroups.map(e=>e.map(e=>parseImplicantToBitString(ctx, e))));
   console.log();
 
   console.log("Starting to find all implicants...");
@@ -96,8 +96,8 @@ export default function solve(mTerms, dTerms)
         {
           if (isValidImplicantPair(term, other))
           {
-            const implicant = createJointImplicant(term, other);
-            console.log("...", implicant.terms, "...");
+            const implicant = createJointImplicant(ctx, term, other);
+            console.log("...", implicant.terms, " => ", parseImplicantToBitString(ctx, implicant), "...");
 
             newImplicants.push(implicant);
           }
@@ -114,7 +114,7 @@ export default function solve(mTerms, dTerms)
         result[setBitCountMinusOne] = newImplicants;
         flag = true;
 
-        console.log("... > Found new implicants:", newImplicants);
+        console.log("... > Found new implicants:", newImplicants.map(e => parseImplicantToBitString(ctx, e)));
       }
       else
       {
@@ -125,7 +125,7 @@ export default function solve(mTerms, dTerms)
     //If found valid next implicant group...
     if (flag)
     {
-      console.log("Created size-" + (termSizeMinusOne + 1), "one-groups:", result.map(e=>e.map(e=>e.terms)));
+      console.log("Created size-" + (termSizeMinusOne + 1), "one-groups:", result.map(e=>e.map(e=>parseImplicantToBitString(ctx, e))));
       implicantGroups.push(result);
     }
     else
@@ -202,7 +202,7 @@ export default function solve(mTerms, dTerms)
       }
     }
   }
-  console.log("Prime implicants:", primeImplicants);
+  console.log("Prime implicants:", primeImplicants.map(e=>parseImplicantToBitString(ctx, e)));
   console.log();
 
   //Finding essential prime implicants
@@ -216,7 +216,7 @@ export default function solve(mTerms, dTerms)
       if (candidates.length == 1)
       {
         const candidate = candidates[0];
-        console.log("Found essential for term", term, "as", candidate);
+        console.log("Found essential for term", term, "as", parseImplicantToBitString(ctx, candidate));
         essentialPrimeImplicants.push(candidate);
         for(let markedTerm of candidate.terms)
         {
@@ -225,7 +225,7 @@ export default function solve(mTerms, dTerms)
       }
     }
   }
-  console.log("Essential Prime Implicants:", essentialPrimeImplicants);
+  console.log("Essential Prime Implicants:", essentialPrimeImplicants.map(e=>parseImplicantToBitString(ctx, e)));
   console.log();
 
   console.log("Finding remaining essential prime implicants...");
@@ -233,16 +233,17 @@ export default function solve(mTerms, dTerms)
   //Make sure found essential prime implicants are in result...
   for(let implicant of essentialPrimeImplicants)
   {
-    result.push(parseImplicantToString(ctx, implicant));
+    result.push(parseImplicantToLiteralString(ctx, implicant));
   }
-  //For every used terms, look for other implicants to cover remaining inputs...
+  //For every used terms, look for other implicants to cover remaining terms...
+  console.log("Remaining:", usedTerms);
   for(let term of usedTerms.keys())
   {
     const candidates = usedTerms.get(term);
     if (candidates)
     {
       const candidate = candidates[0];
-      result.push(parseImplicantToString(ctx, candidate));
+      result.push(parseImplicantToLiteralString(ctx, candidate));
       for(let markedTerm of candidate.terms)
       {
         usedTerms.set(markedTerm, null);
@@ -250,12 +251,13 @@ export default function solve(mTerms, dTerms)
     }
   }
   console.log("Solution:", result);
+  console.log();
 
   //For k-maps, circle all essential prime implicants, and then circle the remaining chosen implicants...
   return result;
 };
 
-function createSingleImplicant(term)
+function createSingleImplicant(ctx, term)
 {
   return {
     terms: [term],
@@ -265,7 +267,7 @@ function createSingleImplicant(term)
   };
 }
 
-function createJointImplicant(a, b)
+function createJointImplicant(ctx, a, b)
 {
   a.dirty = true;
   b.dirty = true;
@@ -279,7 +281,20 @@ function createJointImplicant(a, b)
   };
 }
 
-function parseImplicantToString(ctx, implicant)
+function parseImplicantToBitString(ctx, implicant)
+{
+  let result = implicant.value.toString(2).padStart(ctx.bitCount,'0');
+  for(let i = 0, l = result.length; i < l; ++i)
+  {
+    if ((implicant.mask >> i) & 1 == 1)
+    {
+      result = result.substring(0, l - (i + 1)) + '-' + result.substring(l - i);
+    }
+  }
+  return result;
+}
+
+function parseImplicantToLiteralString(ctx, implicant)
 {
   let result = "";
   const variableOffset = "A".charCodeAt(0) + ctx.bitCount - 1;
