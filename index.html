@@ -1,243 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta http-equiv="Content-type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
 
-<html>
+    <title id="window-title">React App</title>
 
-<head>
-  <title>Karnaugh &amp; Quine-McCluskey Solver</title>
-  <link rel="stylesheet" href="style.css">
-  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
-  <script src="qm-util.js"></script>
-  <script src="qm-output.js"></script>
-  <script src="km-output.js"></script>
-  <script src="qm-process.js"></script>
-  <script src="km-process.js"></script>
-  <script>
-    function init() {
-      $('#inputm').keyup(function(event){
-        var src = $(this).val();
-        var res = parse(src);
-        outputClear(true, true, true);
-        if (res)
-        {
-          $('.output #mterms').text("[ " + res.join(", ") + " ]");
-          outputInit();
-        }
-        else
-        {
-          $('.output #mterms').text("[ ERROR ]");
-        }
-      });
+		<link rel="stylesheet" href="./res/css/style.css">
+  </head>
+  <body>
+    <!-- React Root -->
+    <div id="root"></div>
 
-      $('#inputd').keyup(function(event){
-        var src = $(this).val();
-        var res = parse(src);
-        outputClear(true, true, true);
-        if (res)
-        {
-          $('.output #dterms').text("[ " + res.join(", ") + " ]");
-          outputInit();
-        }
-        else
-        {
-          $('.output #dterms').text("[ ERROR ]");
-        }
-      });
+    <noscript>
+      You need to enable JavaScript to run this app.
+    </noscript>
 
-      $('#inputc').change(function(){
-        if (this.checked)
-        {
-          $('.output #functable').css("display", "block");
-        }
-        else
-        {
-          $('.output #functable').css("display", "none");
-        }
+    <!-- ServiceWorker -->
+    <!-- script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function() {
+        navigator.serviceWorker.register('./serviceWorker.js', { scope: './' })
+        .then(registration => console.log("[ServiceWorker] Registration successful: ", registration.scope),
+          error => console.log("[ServiceWorker] Registration failed: ", error));
       });
     }
+    </script -->
 
-    function process()
-    {
-      var ctx = processQM(parse($('#inputm').val()), parse($('#inputd').val()));
-      processKM(ctx);
-    }
+    <!-- Library files -->
+    <script src="./res/js/I18N.js" type="application/javascript"></script>
 
-    function outputInit(ctx)
-    {
-      ctx = ctx || createContext(parse($('#inputm').val()), parse($('#inputd').val()));
-
-      outputFunctionTable(ctx, $('#inputc').prop('checked'));
-      outputFunction(ctx);
-    }
-
-    function outputClear(init, qm, km)
-    {
-      if (init)
-      {
-        $('.output #func').empty();
-        $('.output #functable').empty();
-      }
-
-      if (qm)
-      {
-        $('.output-qm #grouptables').empty();
-        $('.output-qm #implicanttable').empty();
-        $('.output-qm #primeimplicant').empty();
-        $('.output-qm #solution').empty();
-      }
-
-      if (km)
-      {
-        $('.output-km #kmap').empty();
-        $('.output-km #solution').empty();
-      }
-    }
-
-    function outputFunction(ctx)
-    {
-      var result = "";
-      //Output function
-      result += "F(";
-      for(var i = 0, len = ctx.bits; i < len; ++i)
-      {
-        if (i != 0) result += ", ";
-        result += String.fromCharCode('A'.charCodeAt(0) + i);
-      }
-      result += ") = ";
-      //Output mterms
-      result += " SUM m(";
-      for(var i = 0, len = ctx.mterms.length; i < len; ++i)
-      {
-        var term = ctx.mterms[i];
-        if (i != 0) result += ", ";
-        result += term.toTermString();
-      }
-      result += ")";
-      //Output dterms
-      result += " + SUM d(";
-      for(var i = 0, len = ctx.dterms.length; i < len; ++i)
-      {
-        var term = ctx.dterms[i];
-        if (i != 0) result += ", ";
-        result += term.toTermString();
-      }
-      result += ")";
-      $('.output #func').html(result);
-    }
-
-    function outputFunctionTable(ctx, enabled)
-    {
-      var result = "";
-      var header = "";
-      var body = "";
-      var row = "";
-
-      result = "<table>";
-      header = "<th></th>";
-      for(var i = 0, len = ctx.bits; i < len; ++i)
-      {
-        header += "<th>" + (String.fromCharCode('A'.charCodeAt(0) + i)) + "</th>";
-      }
-      header += "<th></th>"
-      header += "<th>F</th>";
-      result += "<tr>" + header + "</tr>";
-
-      for(var j = 0, len = Math.pow(2, ctx.bits); j < len; ++j)
-      {
-        row = "<tr>";
-        row += "<td>" + j + "</td>";
-        for(var i = ctx.bits - 1; i >= 0; --i)
-        {
-          row += "<td>" + ((j >> i) % 2) + "</td>";
-        }
-
-        var flag = false;
-        if (containsBitTerm(ctx.mterms, new BitTerm(formatBitTerm(ctx, j))))
-        {
-          row += "<td></td><td>" + "1" + "</td>";
-        }
-        else if (containsBitTerm(ctx.dterms, new BitTerm(formatBitTerm(ctx, j))))
-        {
-          row += "<td></td><td>" + "X" + "</td>";
-        }
-        else
-        {
-          row += "<td></td><td>" + "0" + "</td>";
-        }
-        row += "</tr>";
-        body += row;
-      }
-      result += body;
-
-      result += "</table>";
-      $('.output #functable').html(result);
-      $('.output #functable').css("display", enabled ? "block" : "none");
-    }
-  </script>
-</head>
-
-<body onload="init()">
-  <header>
-    <span class="input">
-      M Terms: <input id="inputm" value="4,8,10,11,12,15" />
-    </span>
-    <span class="input" style="float: right">
-      D Terms: <input id="inputd" value="9,14"/>
-    </span>
-    <span style="display:block; clear: both; margin: 10px 0">
-      <input type="checkbox" id="inputc"> Enable Boolean Table
-    </span>
-    <span style="display:block; clear: both; margin: 10px 0">
-      <input type="radio" name="eqnoper" value="sop" checked="checked"> Use Sum of Products <br>
-      <input type="radio" name="eqnoper" value="pos" disabled="true"> Use Product of Sums
-    </span>
-  </header>
-
-  <div class="output">
-    <div style="column-count: 2; column-span: 1; display: block; clear: both; width: 100%">
-      <div>
-        m: <span id="mterms">?</span>
-      </div>
-      <div>
-        d: <span id="dterms">?</span>
-      </div>
-    </div>
-    <br />
-    <span id="functable"></span>
-    <br />
-    <span id="func" style="font-size: 30px; font-weight: 600">F(?) = ?</span>
-  </div>
-
-  <button style="clear:both; width: 100%; font-size: 40px; margin: 20px 0" onclick="process()">Process</button>
-
-  <div class="output-qm">
-    <h1>Quine McCluskey Method</h1>
-    <span id="grouptable"></span>
-    <br />
-    <h2>Group Tables</h2>
-    <span id="grouptables"></span>
-    <br />
-    <br />
-    <h2>Implicant Table</h2>
-    <span id="implicanttable"></span>
-    <br />
-    <h2>Essential Prime Implicant Terms</h2>
-    <span id="primeimplicant"></span>
-    <h1 id="solution" style="text-align: center"></h1>
-  </div>
-
-  <br />
-
-  <div class="output-km">
-    <h1>Karnaugh Method</h1>
-    <h2>Karnaugh Map</h2>
-    <span id="kmap"></span>
-    <h1 id="solution" style="text-align: center"></h1>
-  </div>
-
-  <footer style="text-align: center">
-    <b>Don't forget!</b> Look both ways before crossing the road!
-    <div style="display: none" id="author">
-      Developed by Andrew Kuo :)
-    </div>
-  </footer>
-</body>
+    <!-- Entry point -->
+    <script src="./dist/vendors.bundle.js" type="application/javascript"></script>
+    <script src="./dist/app.bundle.js" type="application/javascript"></script>
+  </body>
 </html>
