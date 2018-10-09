@@ -3,6 +3,7 @@ import { hot } from 'react-hot-loader';
 import './App.css';
 
 import QMMethod from 'qm/QMMethod.js';
+import KMapComponent from 'kmap/KMapComponent.js';
 
 class App extends React.Component
 {
@@ -57,6 +58,7 @@ class App extends React.Component
       <button id="solve-button" onClick={this.onSolveClick}>Solve</button>
       <hr/>
       <h2>{this.output}</h2>
+      <KMapComponent/>
     </div>;
   }
 }

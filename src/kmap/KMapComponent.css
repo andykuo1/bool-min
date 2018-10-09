@@ -1,0 +1,27 @@
+.kmap-table {
+  margin-left: 5px;
+  border-collapse: collapse;
+}
+
+.kmap-table tr {
+}
+
+.kmap-table th {
+  border: 1px solid black;
+  padding: 5px;
+}
+
+.kmap-table td {
+  border: 1px solid black;
+  text-align: center;
+}
+
+.kmap-key {
+  margin-left: 5px;
+  text-align: left;
+}
+
+.kmap-container {
+  display: flex;
+  flex-direction: row;
+}
