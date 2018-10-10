@@ -1,35 +1,30 @@
 import React from 'react';
 import './KMapComponent.css';
 
-import {convertSOPToMinTerms} from 'sop/SumOfProducts.js';
-
 import GrayCode from 'util/GrayCode.js';
-import {pastelColor} from 'util/ColorHelper.js';
 
 class KMapComponent extends React.Component
 {
-  constructor()
+  constructor(props)
   {
-    super();
+    super(props);
 
     this.inputHeader = "?/?";
     this.xHeaders = [];
     this.yHeaders = [];
 
-    this.expressionTerms = [];
-    this.expTerms = new Map();
-    this.minTerms = new Map();
+    this.tableElement = null;
+    this.groupElements = new Map();
+
+    this.expressionGroups = [];
   }
 
   //Override
   componentWillMount()
   {
-    const expression = this.props.src || 'BC\'D\' + AD\' + AC';
-    const inputs = this.props.in || ['A', 'B', 'C', 'D'];
-
-    if (inputs.length < 2) throw new Error("Does not support lesser than 2 inputs");
-    if (inputs.length > 4) throw new Error("Does not support greater than 4 inputs");
-    const bits = inputs.length;
+    const src = this.props.src;
+    const bits = src.getBitCount();
+    const inputs = src.getInputs();
 
     const xAxisBits = Math.ceil(bits / 2);
     const yAxisBits = bits - xAxisBits;
@@ -40,37 +35,64 @@ class KMapComponent extends React.Component
     this.inputHeader = input.substring(0, xAxisBits) + "/" + input.substring(xAxisBits);
     this.xHeaders = xAxisHeaders;
     this.yHeaders = yAxisHeaders;
-    this.expTerms.clear();
-    this.minTerms.clear();
 
-    //Convert expression to minterms
-    const terms = expression.replace(/\s/g,'').split('+');
-    for(const term of terms)
+    this.expressionGroups.length = 0;
+  }
+
+  //Override
+  componentDidMount()
+  {
+    const src = this.props.src;
+    const tableRect = this.tableElement.getBoundingClientRect();
+
+    //Rebuild the expressionGroups
+    for(const expressionTerm of src.getExpression())
     {
-      const result = convertSOPToMinTerms(term, inputs);
-      for(const minterm of result)
-      {
-        this.minTerms.set(minterm, '1');
-      }
-      this.expTerms.set(term, {color: pastelColor(), terms: result});
-    }
+      let left = 0;
+      let top = 0;
+      let right = Infinity;
+      let bottom = Infinity;
 
-    this.expressionTerms = terms;
+      //Get all elements related to expression term group
+      const group = src.getGroupByExpressionTerm(expressionTerm);
+      const minTerms = src.getMinTermsByExpressionTerm(expressionTerm);
+      for(const minTerm of minTerms)
+      {
+        const element = this.groupElements.get(minTerm);
+        const rect = element.getBoundingClientRect();
+        if (rect.left > left) left = rect.left;
+        if (rect.top > top) top = rect.top;
+        if (rect.right < right) right = rect.right;
+        if (rect.bottom < bottom) bottom = rect.bottom;
+      }
+
+      //Calculate expression group
+      const expressionGroup = {
+        term: expressionTerm,
+        x: left,
+        y: top,
+        width: right - left,
+        height: bottom - top,
+        offset: this.expressionGroups.length,
+        color: group.color
+      };
+
+      this.expressionGroups.push(expressionGroup);
+    }
   }
 
   //Override
   render()
   {
-    const expression = this.props.src;
-    const inputs = this.props.in;
+    const src = this.props.src;
 
     return <div className="kmap-container">
-      <table className="kmap-table">
+      <table className="kmap-table" ref={ref=>this.tableElement=ref}>
         <thead>
           <tr>
             <th>{this.inputHeader}</th>
             {
-              this.xHeaders.map(e=><th key={e}>{e}</th>)
+              this.xHeaders.map(x => <th key={x}>{x}</th>)
             }
           </tr>
         </thead>
@@ -80,7 +102,18 @@ class KMapComponent extends React.Component
               return <tr key={y}>
                 <th>{y}</th>
                 {
-                  this.xHeaders.map(x=><td key={x}>{this.minTerms.get(x + y) || '0'}</td>)
+                  this.xHeaders.map(x => {
+                    const bits = x + y;
+                    const groups = src.getGroupsByMinTerm(bits);
+                    const style = null;
+                    return <td key={x} ref={ref=>this.groupElements.set(bits, ref)} style={style}>
+                    {
+                      src.isMinTerm(bits) ? '1' :
+                      src.isDTerm(bits) ? 'X' :
+                      '0'
+                    }
+                    </td>;
+                  })
                 }
               </tr>;
             })
@@ -93,13 +126,24 @@ class KMapComponent extends React.Component
         </thead>
         <tbody>
           {
-            this.expressionTerms.map(e=>
-              <tr key={e}>
-                <td>{e}: {this.expTerms.get(e).color}</td>
-              </tr>)
+            src.getExpression().map(e => {
+              const group = src.getGroupByExpressionTerm(e);
+              return <tr key={e} style={{background: group.color}}>
+                <td>{e}</td>
+              </tr>;
+            })
           }
         </tbody>
       </table>
+      {
+        this.expressionGroups.map(e => <svg key={e.term} width={e.width} height={e.height}
+          style={{position: "fixed", left: e.x, top: e.y}}>
+          <rect className="expression-group"
+            width={e.width} height={e.height}
+            fill="none" stroke={e.color}
+            style={{strokeWidth: "0.5em", strokeDasharray: (5 + (e.offset * 2)) + ", 5"}}/>
+        </svg>)
+      }
     </div>;
   }
 }

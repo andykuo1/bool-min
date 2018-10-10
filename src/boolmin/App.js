@@ -3,6 +3,8 @@ import { hot } from 'react-hot-loader';
 import './App.css';
 
 import QMMethod from 'qm/QMMethod.js';
+import KMap from 'kmap/KMap.js';
+
 import KMapComponent from 'kmap/KMapComponent.js';
 
 class App extends React.Component
@@ -11,35 +13,89 @@ class App extends React.Component
   {
     super(props);
 
-    this.output = null;
-
     this.state = {
-      mterms: "",
-      dterms: ""
+      mvalue: '', dvalue: '',
+      solution: null,
+      kmap: null
     };
 
-    this.onMTermChange = this.onMTermChange.bind(this);
-    this.onDTermChange = this.onDTermChange.bind(this);
-    this.onSolveClick = this.onSolveClick.bind(this);
+    this.onMChange = this.onMChange.bind(this);
+    this.onMBlur = this.onMBlur.bind(this);
+
+    this.onDChange = this.onDChange.bind(this);
+    this.onDBlur = this.onDBlur.bind(this);
+
+    this.onSolve = this.onSolve.bind(this);
   }
 
-  onMTermChange(e)
+  onMChange(e)
   {
-    const value = e.target.value;
+    const value = e.target.value.replace(/[^0-9,]/g,'');
     this.setState({mvalue: value});
   }
 
-  onDTermChange(e)
+  onMBlur(e)
   {
-    const value = e.target.value;
+    const values = e.target.value.split(',');
+    const result = [];
+    for(const value of values)
+    {
+      if (value) result.push(value);
+    }
+    this.setState({mvalue: result.join(',')});
+  }
+
+  onDChange(e)
+  {
+    const value = e.target.value.replace(/[^0-9,]/g,'');
     this.setState({dvalue: value});
   }
 
-  onSolveClick(e)
+  onDBlur(e)
   {
-    const mvalues = this.state.mvalue.split(',');
-    const dvalues = this.state.dvalue.split(',');
-    this.output = QMMethod(mvalues, dvalues).join(', ');
+    const values = e.target.value.split(',');
+    const result = [];
+    for(const value of values)
+    {
+      if (value) result.push(value);
+    }
+    this.setState({dvalue: result.join(',')});
+  }
+
+  onSolve(e)
+  {
+    document.activeElement.blur();
+
+    const mterms = [];
+    for(const term of this.state.mvalue.split(','))
+    {
+      if (term)
+      {
+        mterms.push(parseInt(term));
+      }
+    }
+
+    if (mterms.length > 0)
+    {
+      const dterms = [];
+      for(const term of this.state.dvalue.split(','))
+      {
+        if (term)
+        {
+          dterms.push(parseInt(term));
+        }
+      }
+
+      const solution = QMMethod(mterms, dterms).sort();
+      const kmap = new KMap(mterms, dterms);
+      const expression = solution.join('+');
+      kmap.resolve(expression);
+
+      this.setState({
+        solution: expression,
+        kmap: kmap
+      });
+    }
   }
 
   //Override
@@ -47,18 +103,22 @@ class App extends React.Component
   {
     return <div className="app-container">
       <h1>Boolean Minimization</h1>
-      <div>
-        <label htmlFor="mterm-input">M Terms</label>
-        <input id="mterm-input" onChange={this.onMTermChange}></input>
-      </div>
-      <div>
-        <label htmlFor="dterm-input">D Terms</label>
-        <input id="dterm-input" onChange={this.onDTermChange}></input>
-      </div>
-      <button id="solve-button" onClick={this.onSolveClick}>Solve</button>
-      <hr/>
-      <h2>{this.output}</h2>
-      <KMapComponent/>
+      <label htmlFor="mterm-input">{"Min Terms:"}</label>
+      <input id="mterm-input" value={this.state.mvalue} onChange={this.onMChange} onBlur={this.onMBlur}/>
+      <label htmlFor="dterm-input">{"D Terms:"}</label>
+      <input id="dterm-input" value={this.state.dvalue} onChange={this.onDChange} onBlur={this.onDBlur}/>
+
+      <button onClick={this.onSolve}>Solve</button>
+
+      {
+        this.state.solution &&
+        <KMapComponent src={this.state.kmap}/>
+      }
+
+      <h2>
+        <label>Output: </label>
+        <span>{this.state.solution || '???'}</span>
+      </h2>
     </div>;
   }
 }

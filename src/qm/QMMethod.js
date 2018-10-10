@@ -18,7 +18,7 @@ export default function solve(mTerms, dTerms)
   j = 0;
   for(let term of ctx.terms)
   {
-    i = bitCount32(term);
+    i = bitCount(term);
     if (!j || i > j) j = i;
   }
   ctx.bitCount = j;
@@ -26,7 +26,7 @@ export default function solve(mTerms, dTerms)
   console.log("...for terms:", ctx.terms);
   console.log("...for mTerms:", ctx.mterms);
   console.log("...for dTerms:", ctx.dterms);
-  console.log("...found terms to be using", ctx.bitCount, "bits.");
+  console.log("...found terms to be using", ctx.bitCount, "bit(s).");
   console.log();
 
   console.log("Sorting terms into one-groups...");
@@ -35,7 +35,7 @@ export default function solve(mTerms, dTerms)
   const size1OneGroups = new Array(ctx.bitCount);
   for(let term of ctx.terms)
   {
-    i = countSetBits(term) - 1;
+    i = setBitCount32(term) - 1;
     //console.log("...counted bits:", term, "has", i + 1, "bit(s)...");
     let group = size1OneGroups[i];
     if (!group) group = size1OneGroups[i] = [];
@@ -323,15 +323,18 @@ function isValidImplicantPair(a, b)
     isPowerOfTwo(valueBits) && a.mask == b.mask;
 }
 
-//Assumes value is under 32 bits
-function bitCount32(value)
+function bitCount(value)
 {
-  value = value - ((value >> 1) & 0x55555555);
-  value = (value & 0x33333333) + ((value >> 2) & 0x33333333);
-  return ((value + (value >> 4) & 0xF0F0F0F) * 0x1010101) >> 24;
+  let c = 0;
+  while(value > 0)
+  {
+    ++c;
+    value >>= 1;
+  }
+  return c;
 }
 
-function countSetBits(value)
+function setBitCount(value)
 {
   let c;
   for(c = 0; value > 0; ++c)
@@ -339,6 +342,14 @@ function countSetBits(value)
     value &= (value - 1);
   }
   return c;
+}
+
+//Assumes value is under 32 bits
+function setBitCount32(value)
+{
+  value = value - ((value >> 1) & 0x55555555);
+  value = (value & 0x33333333) + ((value >> 2) & 0x33333333);
+  return ((value + (value >> 4) & 0xF0F0F0F) * 0x1010101) >> 24;
 }
 
 function isPowerOfTwo(value)

@@ -1,10 +1,5 @@
-export function convertSOPToMinTerms(sop, inputs=null, dst=[])
+export function convertSOPToMinTerms(sop, inputs, dst=[])
 {
-  if (inputs == null)
-  {
-    inputs = getUsedInputsFromExpression(sop);
-  }
-
   const terms = sop.replace(/\s/g).split('+');
   for(const term of terms)
   {
@@ -60,15 +55,4 @@ function convertSOPTermToMinTerms(term, inputs, dst)
 
     dst.push(bits.join(''));
   }
-}
-
-export function getUsedInputsFromExpression(expression)
-{
-  const inputs = expression.replace(/[+'\s]/g).split('');
-  const result = new Set();
-  for(const input of inputs)
-  {
-    result.add(input);
-  }
-  return Array.from(result);
 }
