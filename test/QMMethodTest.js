@@ -8,3 +8,6 @@ QMMethod([3, 7, 11, 12, 13, 14, 15], []);
 
 QMMethod([2, 6, 7], []);
 //Should be: ab + bc'
+
+QMMethod([0, 1, 2, 4, 7], []);
+QMMethod([0, 1, 2], []);

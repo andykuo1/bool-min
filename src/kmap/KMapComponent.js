@@ -3,6 +3,7 @@ import './KMapComponent.css';
 
 import GrayCode from 'util/GrayCode.js';
 
+const GROUP_BORDER_WIDTH = 2;
 class KMapComponent extends React.Component
 {
   constructor(props)
@@ -32,18 +33,22 @@ class KMapComponent extends React.Component
     const yAxisHeaders = Array.from(GrayCode(0, yAxisBits));
 
     const input = inputs.join('');
-    this.inputHeader = input.substring(0, xAxisBits) + "/" + input.substring(xAxisBits);
+    this.inputHeader = input.substring(0, yAxisBits) + "/" + input.substring(yAxisBits);
     this.xHeaders = xAxisHeaders;
     this.yHeaders = yAxisHeaders;
 
+    this.minGroups = new Map();
     this.expressionGroups.length = 0;
   }
 
   //Override
-  componentDidMount()
+  componentDidUpdate()
   {
     const src = this.props.src;
     const tableRect = this.tableElement.getBoundingClientRect();
+
+    this.minGroups.clear();
+    this.expressionGroups.length = 0;
 
     //Rebuild the expressionGroups
     for(const expressionTerm of src.getExpression())
@@ -53,31 +58,51 @@ class KMapComponent extends React.Component
       let right = Infinity;
       let bottom = Infinity;
 
+      //TODO: WHAT ABOUT CORNER CASES??!!
+
       //Get all elements related to expression term group
       const group = src.getGroupByExpressionTerm(expressionTerm);
       const minTerms = src.getMinTermsByExpressionTerm(expressionTerm);
+      if (!minTerms) console.log(expressionTerm, "does not have minterms????");
+      const isEssential = minTerms ? minTerms.length <= 1 : false;
       for(const minTerm of minTerms)
       {
         const element = this.groupElements.get(minTerm);
         const rect = element.getBoundingClientRect();
+        if (!this.minGroups.has(minTerm))
+        {
+          this.minGroups.set(minTerm, []);
+        }
+        const minGroup = this.minGroups.get(minTerm);
+
+        /*
         if (rect.left > left) left = rect.left;
         if (rect.top > top) top = rect.top;
         if (rect.right < right) right = rect.right;
         if (rect.bottom < bottom) bottom = rect.bottom;
+        */
+
+        left = rect.left;
+        right = rect.right;
+        top = rect.top;
+        bottom = rect.bottom;
+
+        //Calculate expression group
+        const expressionGroup = {
+          term: expressionTerm,
+          mterm: minTerm,
+          x: left - tableRect.left,
+          y: top - tableRect.top,
+          width: right - left,
+          height: bottom - top,
+          offset: minGroup.length,
+          color: group.color,
+          essential: isEssential
+        };
+
+        minGroup.push(expressionGroup);
+        this.expressionGroups.push(expressionGroup);
       }
-
-      //Calculate expression group
-      const expressionGroup = {
-        term: expressionTerm,
-        x: left,
-        y: top,
-        width: right - left,
-        height: bottom - top,
-        offset: this.expressionGroups.length,
-        color: group.color
-      };
-
-      this.expressionGroups.push(expressionGroup);
     }
   }
 
@@ -86,7 +111,7 @@ class KMapComponent extends React.Component
   {
     const src = this.props.src;
 
-    return <div className="kmap-container">
+    return <div className="kmap-container" style={{position: "relative"}}>
       <table className="kmap-table" ref={ref=>this.tableElement=ref}>
         <thead>
           <tr>
@@ -136,12 +161,12 @@ class KMapComponent extends React.Component
         </tbody>
       </table>
       {
-        this.expressionGroups.map(e => <svg key={e.term} width={e.width} height={e.height}
-          style={{position: "fixed", left: e.x, top: e.y}}>
+        this.expressionGroups.map(e => <svg key={e.term + ":" + e.mterm} width={e.width} height={e.height}
+          style={{position: "absolute", left: e.x, top: e.y, zIndex: e.offset}}>
           <rect className="expression-group"
             width={e.width} height={e.height}
             fill="none" stroke={e.color}
-            style={{strokeWidth: "0.5em", strokeDasharray: (5 + (e.offset * 2)) + ", 5"}}/>
+            style={{strokeWidth: "0.5em", strokeDasharray: GROUP_BORDER_WIDTH + ", " + (e.offset * GROUP_BORDER_WIDTH)}}/>
         </svg>)
       }
     </div>;

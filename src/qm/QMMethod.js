@@ -35,8 +35,8 @@ export default function solve(mTerms, dTerms)
   const size1OneGroups = new Array(ctx.bitCount);
   for(let term of ctx.terms)
   {
-    i = setBitCount32(term) - 1;
-    //console.log("...counted bits:", term, "has", i + 1, "bit(s)...");
+    i = setBitCount32(term);
+    //console.log("...counted bits:", term, "has", i, "bit(s)...");
     let group = size1OneGroups[i];
     if (!group) group = size1OneGroups[i] = [];
     group.push(createSingleImplicant(ctx, term));
@@ -79,7 +79,7 @@ export default function solve(mTerms, dTerms)
       console.log("...searching", setBitCountMinusOne + 1, "set bit(s) one-group...");
       const oneGroup = prevOneGroups[setBitCountMinusOne];
       //Group was not found earlier
-      if (!oneGroup) break;
+      if (!oneGroup) continue;
 
       //To store newly found implicants
       const newImplicants = [];
@@ -296,6 +296,8 @@ function parseImplicantToBitString(ctx, implicant)
 
 function parseImplicantToLiteralString(ctx, implicant)
 {
+  if (ctx.bitCount <= 0) throw new Error("Cannot parse implicant with 0 bits");
+
   let result = "";
   const variableOffset = "A".charCodeAt(0) + ctx.bitCount - 1;
   const value = implicant.value;

@@ -100,7 +100,7 @@ class KMap
   }
 }
 
-function getUsedInputsFromExpression(expression)
+export function getUsedInputsFromExpression(expression)
 {
   const inputs = expression.replace(/[^A-Z]+/g, '').split('');
   const result = new Set();
