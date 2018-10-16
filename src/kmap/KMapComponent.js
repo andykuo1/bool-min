@@ -17,6 +17,8 @@ class KMapComponent extends React.Component
     this.tableElement = null;
     this.groupElements = new Map();
 
+    this.targetGroup = null;
+    this.targetGroups = [];
     this.expressionGroups = [];
   }
 
@@ -45,6 +47,8 @@ class KMapComponent extends React.Component
   componentDidUpdate()
   {
     const src = this.props.src;
+    if (!this.tableElement) return;
+
     const tableRect = this.tableElement.getBoundingClientRect();
 
     this.minGroups.clear();
@@ -57,8 +61,6 @@ class KMapComponent extends React.Component
       let top = 0;
       let right = Infinity;
       let bottom = Infinity;
-
-      //TODO: WHAT ABOUT CORNER CASES??!!
 
       //Get all elements related to expression term group
       const group = src.getGroupByExpressionTerm(expressionTerm);
@@ -153,7 +155,10 @@ class KMapComponent extends React.Component
           {
             src.getExpression().map(e => {
               const group = src.getGroupByExpressionTerm(e);
-              return <tr key={e} style={{background: group.color}}>
+              return <tr key={e}
+                style={{background: this.targetGroups.length > 0 && !this.targetGroups.includes(e) ? "white" : group.color}}
+                onMouseEnter={ev => this.targetGroups.push(e)}
+                onMouseLeave={ev => this.targetGroups.length = 0}>
                 <td>{e}</td>
               </tr>;
             })
@@ -161,12 +166,22 @@ class KMapComponent extends React.Component
         </tbody>
       </table>
       {
-        this.expressionGroups.map(e => <svg key={e.term + ":" + e.mterm} width={e.width} height={e.height}
+        this.expressionGroups.map(e => <svg key={e.term + ":" + e.mterm}
+          width={e.width} height={e.height}
           style={{position: "absolute", left: e.x, top: e.y, zIndex: e.offset}}>
           <rect className="expression-group"
             width={e.width} height={e.height}
-            fill="none" stroke={e.color}
-            style={{strokeWidth: "0.5em", strokeDasharray: GROUP_BORDER_WIDTH + ", " + (e.offset * GROUP_BORDER_WIDTH)}}/>
+            fill="rgba(0,0,0,0.03)" stroke={this.targetGroups.length > 0 && !this.targetGroups.includes(e.term) ? "white" : e.color}
+            style={{strokeWidth: "0.5em", strokeDasharray: GROUP_BORDER_WIDTH + ", " + (e.offset * GROUP_BORDER_WIDTH)}}
+            onMouseEnter={ev => {
+              if (e.offset != 0) return;
+              this.targetGroups.length = 0;
+              src.getExpressionTermsByMinTerm(e.mterm, this.targetGroups);
+            }}
+            onMouseLeave={ev => {
+              if (e.offset != 0) return;
+              this.targetGroups.length = 0;
+            }}/>
         </svg>)
       }
     </div>;

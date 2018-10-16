@@ -68,10 +68,24 @@ class KMap
     return this.groups.get(expressionTerm).minTerms;
   }
 
-  getGroupsByMinTerm(bitTerm)
+  getGroupsByMinTerm(bitTerm, dst=[])
   {
-    if (!this.groupMapping.has(bitTerm)) return null;
-    return this.groupMapping.get(bitTerm).map(e => this.groups.get(e));
+    if (!this.groupMapping.has(bitTerm)) return dst;
+    for(const e of this.groupMapping.get(bitTerm))
+    {
+      dst.push(this.groups.get(e));
+    }
+    return dst;
+  }
+
+  getExpressionTermsByMinTerm(bitTerm, dst=[])
+  {
+    if (!this.groupMapping.has(bitTerm)) return dst;
+    for(const e of this.groupMapping.get(bitTerm))
+    {
+      dst.push(this.groups.get(e).term);
+    }
+    return dst;
   }
 
   isMinTerm(bitTerm)
