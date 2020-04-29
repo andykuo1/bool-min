@@ -1,11 +1,11 @@
-# ReactDefaultApp
+# BoolMin
 
-> The browser-based solution for instant react app.
+> The browser-based solution for your Boolean Minimization.
 
 ---
 
 ## Purpose
-A react app.
+To help you with solving boolean minimization problems.
 
 ## Table of Contents
 * [Getting Started](#getting-started)
